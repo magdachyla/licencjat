@@ -1,0 +1,215 @@
+title: "Projekt_dom"
+author:
+  - Magda Chyla
+date: "r format(Sys.Date())"
+output:
+  bookdown::html_document2:
+  code_folding: show
+keep_md: yes
+toc: TRUE
+toc_float: TRUE
+toc_depth: 6
+fig_caption: yes
+bibliography: BalticPhotoperiod.bib
+csl: plos-one.csl
+editor_options: 
+  markdown: 
+  wrap: 72
+
+
+```{r load libraries, warning = FALSE, echo=FALSE}
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(data.table)
+library(googledrive)
+library(googlesheets4)
+library(ggforce)
+```
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+knitr::opts_chunk$set(fig.path='Figs/')
+```
+
+
+
+
+
+
+```{r, Warning = FALSE, Echo = FALSE}
+gs4_deauth()
+# this is the URL or ID of a Sheet readable by anyone (with a link)
+MainCatalog <- read_sheet("https://docs.google.com/spreadsheets/d/1O5NU4XrLIK-E1wAfHs8BkSho4GlhkehwueqceHtoNQQ/edit?gid=886344930#gid=886344930")
+```
+dodanie nowej kolumny i policzenie dnia eksperymentu
+```{r}
+colnames(MainCatalog)
+
+MainCatalog <- MainCatalog %>%
+group_by(SampleID) %>%
+  arrange(ObsDate) %>%
+  mutate(E_days = as.numeric((ObsDate - StartDate[1]))) %>%
+ungroup() 
+```
+
+
+robimy średnią 
+```{r}
+MainCatalog <- MainCatalog %>%
+  group_by(E_days, Strain) %>%
+  summarize(SampleID, Strain, E_days, OD, ObsDate, StartDate, meanOD = mean(OD),SDOD = sd(OD)) %>%
+  ungroup() 
+```
+wykres 
+```{r}
+wykres<-ggplot(data=MainCatalog, aes(x= Strain, y= meanOD), fill= "blue", colour = "blue") +
+   geom_bar(stat="identity") +
+  labs(x = "szczep", y = "średnia OD") +
+  theme_bw() +
+ theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=18),
+        strip.background = element_rect(fill="white"),
+        strip.text = element_text(size=14),
+  
+                                    
+        legend.background = element_rect(fill="transparent"),
+        legend.position = c(0.12,0.76),
+        legend.key.height= unit(0.005, 'cm'),
+        legend.spacing.x = unit(0.01, 'cm'),
+        legend.text = element_text(size=14))
+wykres
+   
+
+```
+
+
+
+
+```{r}
+# load library tidyverse 
+library(tidyverse) 
+  
+# create data for world coordinates using  
+# map_data() function 
+world_coordinates <- map_data("world") 
+  
+# create world map using ggplot() function 
+ggplot() + 
+  
+# geom_map() function takes world coordinates  
+# as input to plot world map 
+  geom_map( 
+    data = world_coordinates, map = world_coordinates, 
+    aes(long, lat, map_id = region)) +
+  labs(x = "dlugość", y = "szerokość") +
+  theme_bw() +
+ theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=18),
+        strip.background = element_rect(fill="white"),
+        strip.text = element_text(size=14),
+        axis.title.y = element_text(margin=margin(r=10)),
+        # axis.title.x = element_text(margin=margin(t=10)),
+        axis.title.x = element_blank(),
+        legend.background = element_rect(fill="transparent"),
+        legend.position = c(0.12,0.76),
+        legend.key.height= unit(0.005, 'cm'),
+        legend.spacing.x = unit(0.01, 'cm'),
+        legend.text = element_text(size=14))
+```
+wykres 
+
+```{r}
+library(ggplot2)
+
+# Sprawdzenie danych
+str(MainCatalog)
+
+# Tworzenie wykresu
+wykres <- ggplot(data = MainCatalog, aes(x = Strain, y = meanOD)) +
+  geom_bar(stat = "identity", fill = "blue", colour = "black") +
+  labs(x = "Szczep", y = "Średnia OD") +
+  theme_bw() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 18),
+    strip.background = element_rect(fill = "white"),
+    strip.text = element_text(size = 14)
+  )
+
+print(wykres)
+
+```
+```{r}
+# Outside bars
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  geom_text(aes(label=len), vjust=-0.3, size=3.5)+
+  theme_minimal()
+# Inside bars
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  geom_text(aes(label=len), vjust=1.6, color="white", size=3.5)+
+  theme_minimal()
+```
+```{r}
+library(ggplot2)
+
+# Tworzymy przykładowy dataframe
+df <- data.frame(
+  dose = c("S", "Y", "L", "W", "I", "A"),
+  len = c(5, 10, 15, 20, 25, 30) # Przykładowe wartości
+)
+
+# Wykres 1: Etykiety na zewnątrz słupków
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  geom_text(aes(label=len), vjust=-0.3, size=3.5) +
+  theme_minimal()
+
+# Wykres 2: Etykiety wewnątrz słupków
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  geom_text(aes(label=len), vjust=1.6, color="white", size=3.5) +
+  theme_minimal()
+
+```
+
+```{r}
+library(ggplot2)
+
+# Tworzymy dataframe
+df <- data.frame(
+  dose = c("S", "Y", "L", "W", "I", "A"),
+  len = c(5, 10, 15, 20, 25, 30),
+  labels= c("Synechococcus", "?", "Laminaria", "Wakame", "Ishige","Anabaena")# Przykładowe wartości
+)
+
+# Sortujemy kategorię 'dose' od największego do najmniejszego len
+df$dose <- factor(df$dose, levels = df$dose[order(df$len)])
+
+# Wykres 1: Etykiety na zewnątrz słupków
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  geom_text(aes(label=dose), vjust=-0.3, size=5) + 
+  labs (x= "tutoring", y= "super") +# Wyświetlamy literki
+  theme_minimal()
+
+# Wykres 2: Etykiety wewnątrz słupków
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  geom_text(aes(label=labels), vjust=1.6, color="white", size=2) +
+  labs (x= "tutoring", y= "super") +# Wyświetlamy literki
+  theme_minimal()
+
+```
+
+
+
